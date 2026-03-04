@@ -1,0 +1,100 @@
+{"id": "knowledge_001", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_002", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_003", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_004", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_005", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_006", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_007", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_008", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_009", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_010", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_011", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_012", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_013", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_014", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_015", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_016", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_017", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_018", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_019", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_020", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_021", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_022", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_023", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_024", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_025", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_026", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_027", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_028", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_029", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_030", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_031", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_032", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_033", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_034", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_035", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_036", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_037", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_038", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_039", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_040", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_041", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_042", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_043", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_044", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_045", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_046", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_047", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_048", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_049", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_050", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_051", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_052", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_053", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_054", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_055", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_056", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_057", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_058", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_059", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_060", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_061", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_062", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_063", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_064", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_065", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_066", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_067", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_068", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_069", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_070", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_071", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_072", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_073", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_074", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_075", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_076", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_077", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_078", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_079", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_080", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_081", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_082", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_083", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_084", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_085", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_086", "query": "深圳今天的天气适合扫地机器人拖地吗？", "user_city": "深圳", "expected_keywords": ["深圳"], "expected_tools": ["get_weather"]}
+{"id": "report_087", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1002", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_088", "query": "拖布多久清洗一次合适？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_089", "query": "上海今天的天气适合扫地机器人拖地吗？", "user_city": "上海", "expected_keywords": ["上海"], "expected_tools": ["get_weather"]}
+{"id": "report_090", "query": "请帮我生成2025-06的扫地机器人使用报告。", "user_id": "1005", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_091", "query": "扫地机器人吸力变弱怎么处理？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_092", "query": "杭州今天的天气适合扫地机器人拖地吗？", "user_city": "杭州", "expected_keywords": ["杭州"], "expected_tools": ["get_weather"]}
+{"id": "report_093", "query": "请帮我生成2025-09的扫地机器人使用报告。", "user_id": "1003", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_094", "query": "扫地机器人边刷多久更换？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_095", "query": "北京今天的天气适合扫地机器人拖地吗？", "user_city": "北京", "expected_keywords": ["北京"], "expected_tools": ["get_weather"]}
+{"id": "report_096", "query": "请帮我生成2025-12的扫地机器人使用报告。", "user_id": "1001", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_097", "query": "扫地机器人为什么会漏扫？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
+{"id": "weather_098", "query": "合肥今天的天气适合扫地机器人拖地吗？", "user_city": "合肥", "expected_keywords": ["合肥"], "expected_tools": ["get_weather"]}
+{"id": "report_099", "query": "请帮我生成2025-03的扫地机器人使用报告。", "user_id": "1004", "expected_keywords": ["报告"], "expected_tools": ["fill_context_for_report", "fetch_external_data"]}
+{"id": "knowledge_100", "query": "地毯场景下要注意什么？", "expected_keywords": ["扫地机器人"], "expected_tools": ["rag_summarize"]}
