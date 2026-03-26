@@ -1,4 +1,3 @@
-# logger_utils.py
 import logging
 import os
 import re
@@ -13,6 +12,7 @@ os.makedirs(LOG_ROOT, exist_ok=True)
 
 # 日志格式配置（包含时间、模块、行号，便于调试Agent）
 DEFAULT_LOG_FORMAT = logging.Formatter(
+    # 日志格式：时间 - 模块名 - 日志级别 - 文件名:行号 - 日志消息
     "%(asctime)s - %(name)s - %(levelname)s - %(filename)s:%(lineno)d - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S"
 )
@@ -27,13 +27,14 @@ def mask_sensitive_data(text: str) -> str:
     if not isinstance(text, str):
         return text
 
-    # 脱敏OpenAI/通义千问API Key（sk-开头）
+    # 脱敏OpenAI/通义千问API Key（sk-开头），\w匹配字母、数字、下划线，+匹配1次或多次
     text = re.sub(r"sk-\w+", "sk-******", text)
-    # 脱敏手机号
+    # 脱敏手机号，\d匹配数字，{9}匹配9个数字
     text = re.sub(r"1[3-9]\d{9}", "1**********", text)
-    # 脱敏邮箱
+    # 脱敏邮箱，\w匹配字母、数字、下划线，+匹配1次或多次，@匹配@符号，\.匹配.符号
+    # \1匹配第一个捕获组（用户名），\2匹配第二个捕获组（域名），\3匹配第三个捕获组（域名后缀）
     text = re.sub(r"(\w+)@(\w+)\.(\w+)", r"\1****@\2.\3", text)
-    # 脱敏密码/密钥（password/key=开头）
+    # 脱敏密码/密钥（password/key=开头），[^& ]+匹配除&和空格以外的任意字符，+匹配1次或多次
     text = re.sub(r"(password|key|secret)=[^& ]+", r"\1=******", text)
     return text
 
@@ -42,6 +43,8 @@ class SensitiveDataFilter(logging.Filter):
     """日志过滤器：自动脱敏日志中的敏感信息"""
 
     def filter(self, record: logging.LogRecord) -> bool:
+        # 返回True表示继续处理日志记录，False则过滤掉
+        # 比如logging.info("API Key: %s", "sk-1234567890abcdef")
         # 对日志消息脱敏
         if record.msg:
             record.msg = mask_sensitive_data(record.msg)
@@ -84,6 +87,7 @@ def get_logger(
     if not log_file:
         log_file = os.path.join(LOG_ROOT, f"{name}_{datetime.now().strftime('%Y%m%d')}.log")
 
+    # 创建文件并返回文件句柄
     file_handler = logging.FileHandler(log_file, encoding="utf-8")
     file_handler.setLevel(file_level)
     file_handler.setFormatter(DEFAULT_LOG_FORMAT)
@@ -94,3 +98,13 @@ def get_logger(
 
 # 快捷获取默认Agent日志器
 logger = get_logger("agent")
+
+if __name__ == "__main__":
+    # 测试日志器
+    # debug的级别是10，info的级别是20，warning的级别是30，error的级别是40，critical的级别是50，
+    # 只有当日志级别大于等于设置的级别时，才会被记录下来
+    logger.debug("这是一条DEBUG日志")
+    logger.info("这是一条INFO日志")
+    logger.warning("这是一条WARNING日志")
+    logger.error("这是一条ERROR日志")
+    logger.critical("这是一条CRITICAL日志")

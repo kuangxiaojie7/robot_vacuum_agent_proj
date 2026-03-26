@@ -14,6 +14,7 @@ class RagSummarizeService:
     # 类变量缓存，所有实例共用
     _PROMPT_TEXT: str = None
 
+    # 实体变量，每个实例独有
     def __init__(self, vector_store: VectorStoreService):
         self.vector_store = vector_store
         self.retriever = self.vector_store.get_retriever()
@@ -49,10 +50,26 @@ class RagSummarizeService:
         self._PROMPT_TEXT = prompt_text
         return prompt_text
 
+
+    # 对于 prompt_template: 
+    #   invoke(dict) -> PromptValue 对象。
+    #   内部逻辑：输入 dict，生成 PromptValue。随后模型会根据自身需求调用 
+    #   PromptValue 的 to_messages() (得到 list[BaseMessage]) 或 to_string() (得到 str)，Langchain会根据模型的需求选择合适的方法,不需要手动指定。
+
+    # 对于 model (以 ChatModel 为例): 
+    #   invoke(str | list[BaseMessage] | PromptValue) -> BaseMessage 对象 (通常是 AIMessage)。
+    #   注意：虽然它可以接收 str，但输出始终是一个包含元数据的 Message 对象，而非纯字符串。
+
+    # 对于 StrOutputParser: 
+    #   invoke(BaseMessage) -> str。
+    #   内部逻辑：提取输入对象（如 AIMessage）的 .content 属性，将其转换为纯字符串。
+
     def _init_chain(self):
+        # 数据流：dict -> PromptValue -> AIMessage -> str
         chain = self.prompt_template | self.model | StrOutputParser()
         return chain
 
+    # 从向量数据库检索文档，返回的是list[Document],共有k个文档
     def retrieve_docs(self, query: str) -> list[Document]:
         return self.retriever.invoke(query)
 
@@ -76,6 +93,7 @@ class RagSummarizeService:
 # for testing
 if __name__ == '__main__':
     vs = VectorStoreService()
-    rag = RagSummarizeService(vs)
+    vs.load_document()
+    rag = RagSummarizeService()
 
     print(rag.rag_summarize("小户型适合哪种扫地机器人？"))

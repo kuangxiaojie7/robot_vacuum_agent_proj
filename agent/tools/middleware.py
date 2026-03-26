@@ -1,4 +1,5 @@
 from typing import Callable, Any
+from utils.prompt_loader import load_system_prompts, load_report_prompts
 from langchain.agents import AgentState
 from langchain.agents.middleware import wrap_tool_call, before_model, dynamic_prompt, ModelRequest
 from langchain.tools.tool_node import ToolCallRequest
@@ -6,54 +7,57 @@ from langchain_core.messages import ToolMessage
 from langgraph.runtime import Runtime
 from langgraph.types import Command
 from utils.logger_handler import logger
-from utils.prompt_loader import load_system_prompt, load_report_prompt
 
 
 @wrap_tool_call
 def monitor_tool(
+        # 请求的数据封装
         request: ToolCallRequest,
-        handler: Callable[[ToolCallRequest], ToolMessage | Command]
-) -> ToolMessage | Command:
+        # 执行的函数本身
+        handler: Callable[[ToolCallRequest], ToolMessage | Command],
+) -> ToolMessage | Command:             # 工具执行的监控
     ctx = request.runtime.context
     ctx["tool_call_total"] = int(ctx.get("tool_call_total", 0)) + 1
     ctx.setdefault("tool_calls", [])
     ctx.setdefault("tool_call_failed_names", [])
     ctx["tool_calls"].append(request.tool_call["name"])
 
-    logger.info(f"[tool monitor]执行工具: {request.tool_call['name']}")
-    logger.info(f"[tool monitor]参数: {request.tool_call['args']}")
+    logger.info(f"[tool monitor]执行工具：{request.tool_call['name']}")
+    logger.info(f"[tool monitor]传入参数：{request.tool_call['args']}")
+
     try:
         result = handler(request)
         ctx["tool_call_success"] = int(ctx.get("tool_call_success", 0)) + 1
         logger.info(f"[tool monitor]工具{request.tool_call['name']}调用成功")
 
-        if request.tool_call['name'] == 'fill_context_for_report':
-            logger.info(f"[tool monitor]fill_context_for_report工具被调用，注入上下文 report=True")
+        if request.tool_call['name'] == "fill_context_for_report":
             request.runtime.context["report"] = True
+
         return result
     except Exception as e:
         ctx["tool_call_failed"] = int(ctx.get("tool_call_failed", 0)) + 1
         ctx["tool_call_failed_names"].append(request.tool_call["name"])
-        logger.info(f"工具{request.tool_call['name']}调用失败: {e}")
-        raise
+        logger.error(f"工具{request.tool_call['name']}调用失败，原因：{str(e)}")
+        raise e
 
 
 @before_model
-def log_before_model(state:AgentState, runtime: Runtime) -> dict[str, Any] | None:
-    logger.info(f"[log_before_model]: 即将调用模型，带有{len(state['messages'])}条消息，消息如下：")
-    # for message in state['messages']:
-    #     logger.info(f"[log_before_model][{type(message).__name__}]: {message.content.strip()}")
-    logger.info(f"[log_before_model]: ----------省略已输出内容----------")
-    logger.info(f"[log_before_model][{type(state['messages'][-1]).__name__}]: {state['messages'][-1].content.strip()}")
+def log_before_model(
+        state: AgentState,          # 整个Agent智能体中的状态记录
+        runtime: Runtime,           # 记录了整个执行过程中的上下文信息
+) -> dict[str, Any] | None:         # 在模型执行前输出日志
+    # dict[str, Any] 是 Python 的类型注解，表示一个字典类型，其中：键的类型是 str（字符串）值的类型是 Any（任意类型）
+    logger.info(f"[log_before_model]即将调用模型，带有{len(state['messages'])}条消息。")
 
+    logger.debug(f"[log_before_model]{type(state['messages'][-1]).__name__} | {state['messages'][-1].content.strip()}")
 
     return None
 
-@dynamic_prompt
-def report_prompt_switch(request: ModelRequest) -> str:
+
+@dynamic_prompt                 # 每一次在生成提示词之前，调用此函数
+def report_prompt_switch(request: ModelRequest):     # 动态切换提示词
     is_report = request.runtime.context.get("report", False)
-    if is_report:
-        return load_report_prompt()
+    if is_report:               # 是报告生成场景，返回报告生成提示词内容
+        return load_report_prompts()
 
-    return load_system_prompt()
-
+    return load_system_prompts()

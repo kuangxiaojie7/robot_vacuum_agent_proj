@@ -1,13 +1,18 @@
 import csv
 import json
+import sys
 from datetime import datetime
 from pathlib import Path
-
-from agent.react_agent import ReactAgent
-from agent.tools.agent_tools import set_user_context
+from time import perf_counter
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from agent.react_agent import ReactAgent
+from agent.tools.agent_tools import rag, set_user_context
+
 DATASET_PATH = PROJECT_ROOT / "evaluation" / "datasets" / "qa_samples.jsonl"
 OUTPUT_DIR = PROJECT_ROOT / "evaluation" / "output"
 REPORT_PATH = OUTPUT_DIR / "latest_report.json"
@@ -33,12 +38,15 @@ def generate_default_samples(total_samples: int = 100) -> list[dict]:
     for idx in range(total_samples):
         category = idx % 3
         if category == 0:
-            query = f"{knowledge_topics[idx % len(knowledge_topics)]}？"
+            topic = knowledge_topics[idx % len(knowledge_topics)]
+            query = f"{topic}？"
             samples.append(
                 {
                     "id": f"knowledge_{idx + 1:03d}",
+                    "type": "rag",
                     "query": query,
                     "expected_keywords": ["扫地机器人"],
+                    "retrieval_expected_keywords": [topic[:4]],
                     "expected_tools": ["rag_summarize"],
                 }
             )
@@ -50,6 +58,7 @@ def generate_default_samples(total_samples: int = 100) -> list[dict]:
             samples.append(
                 {
                     "id": f"weather_{idx + 1:03d}",
+                    "type": "tool",
                     "query": query,
                     "user_city": city,
                     "expected_keywords": [city],
@@ -64,6 +73,7 @@ def generate_default_samples(total_samples: int = 100) -> list[dict]:
         samples.append(
             {
                 "id": f"report_{idx + 1:03d}",
+                "type": "tool",
                 "query": query,
                 "user_id": user_id,
                 "expected_keywords": ["报告"],
@@ -92,8 +102,35 @@ def load_samples(dataset_path: Path) -> list[dict]:
             line = line.strip()
             if not line:
                 continue
-            rows.append(json.loads(line))
+            rows.append(normalize_sample(json.loads(line)))
     return rows
+
+
+def normalize_sample(sample: dict) -> dict:
+    normalized = dict(sample)
+    expected_tools = normalized.get("expected_tools", [])
+    history = normalized.get("history") or []
+
+    if "type" not in normalized:
+        if history:
+            normalized["type"] = "multi_turn"
+        elif "rag_summarize" in expected_tools:
+            normalized["type"] = "rag"
+        elif expected_tools:
+            normalized["type"] = "tool"
+        else:
+            normalized["type"] = "general"
+
+    normalized["history"] = history
+    normalized["expected_keywords"] = normalized.get("expected_keywords", [])
+    normalized["expected_tools"] = expected_tools
+
+    if normalized["type"] == "rag" and "retrieval_expected_keywords" not in normalized:
+        query = str(normalized.get("query", "")).replace("？", "").replace("?", "")
+        query_hint = query.replace("扫地机器人", "").strip()
+        normalized["retrieval_expected_keywords"] = [query_hint[:4] or query[:4]]
+
+    return normalized
 
 
 def evaluate_answer(answer: str, expected_keywords: list[str]) -> bool:
@@ -108,6 +145,26 @@ def evaluate_expected_tools(called_tools: list[str], expected_tools: list[str]) 
     return all(tool_name in called_tools for tool_name in expected_tools)
 
 
+def evaluate_retrieval_hit(retrieved_docs: list, expected_keywords: list[str]) -> bool:
+    if not expected_keywords:
+        return False
+
+    combined_text = "\n".join(getattr(doc, "page_content", "") for doc in retrieved_docs)
+    return all(keyword in combined_text for keyword in expected_keywords)
+
+
+def retrieve_for_eval(query: str, expected_keywords: list[str]) -> tuple[bool, float, str]:
+    start = perf_counter()
+    try:
+        docs = rag.retrieve_docs(query)
+        latency_ms = round((perf_counter() - start) * 1000, 2)
+        hit = evaluate_retrieval_hit(docs, expected_keywords)
+        return hit, latency_ms, ""
+    except Exception as e:
+        latency_ms = round((perf_counter() - start) * 1000, 2)
+        return False, latency_ms, str(e)[:200]
+
+
 def run_evaluation():
     samples = load_samples(DATASET_PATH)
     agent = ReactAgent()
@@ -116,6 +173,16 @@ def run_evaluation():
     model_error_hint = ""
 
     for sample in samples:
+        sample_type = sample.get("type", "general")
+        retrieval_hit = ""
+        retrieval_latency_ms = ""
+        retrieval_error = ""
+        if sample_type == "rag":
+            retrieval_hit, retrieval_latency_ms, retrieval_error = retrieve_for_eval(
+                sample["query"],
+                sample.get("retrieval_expected_keywords", []),
+            )
+
         set_user_context(
             user_id=sample.get("user_id"),
             city=sample.get("user_city"),
@@ -161,9 +228,13 @@ def run_evaluation():
         details.append(
             {
                 "id": sample.get("id", ""),
+                "type": sample_type,
                 "query": sample["query"],
+                "has_expected_tools": int(bool(expected_tools)),
                 "answer_correct": int(answer_correct),
                 "expected_tools_hit": int(expected_tools_hit),
+                "retrieval_hit": int(retrieval_hit) if retrieval_hit != "" else "",
+                "retrieval_latency_ms": retrieval_latency_ms,
                 "latency_ms": result["latency_ms"],
                 "tool_call_total": result["tool_call_total"],
                 "tool_call_success": result["tool_call_success"],
@@ -171,6 +242,7 @@ def run_evaluation():
                 "tool_calls": "|".join(result["tool_calls"]),
                 "answer_preview": answer[:120].replace("\n", " "),
                 "error_message": error_message[:200],
+                "retrieval_error": retrieval_error,
             }
         )
 
@@ -179,9 +251,32 @@ def run_evaluation():
     total_tool_calls = sum(item["tool_call_total"] for item in details)
     total_tool_success = sum(item["tool_call_success"] for item in details)
     total_latency = sum(item["latency_ms"] for item in details)
+    tool_expected_samples = [item for item in details if item["has_expected_tools"] == 1]
+    rag_samples = [item for item in details if item["type"] == "rag"]
+    multi_turn_samples = [item for item in details if item["type"] == "multi_turn"]
+
+    retrieval_total = len(rag_samples)
+    retrieval_hit_count = sum(int(item["retrieval_hit"]) for item in rag_samples if item["retrieval_hit"] != "")
+    retrieval_latency_values = [
+        float(item["retrieval_latency_ms"])
+        for item in rag_samples
+        if item["retrieval_latency_ms"] != ""
+    ]
+    multi_turn_correct = sum(item["answer_correct"] for item in multi_turn_samples)
+    tool_accuracy_count = sum(item["expected_tools_hit"] for item in tool_expected_samples)
 
     answer_accuracy = round((answer_correct_count / total_samples) * 100, 2) if total_samples else 0.0
     tool_success_rate = round((total_tool_success / total_tool_calls) * 100, 2) if total_tool_calls else 100.0
+    tool_call_accuracy = round((tool_accuracy_count / len(tool_expected_samples)) * 100, 2) if tool_expected_samples else 0.0
+    top_k_hit_rate = round((retrieval_hit_count / retrieval_total) * 100, 2) if retrieval_total else 0.0
+    avg_retrieval_latency_ms = (
+        round(sum(retrieval_latency_values) / len(retrieval_latency_values), 2)
+        if retrieval_latency_values else 0.0
+    )
+    multi_turn_accuracy = (
+        round((multi_turn_correct / len(multi_turn_samples)) * 100, 2)
+        if multi_turn_samples else 0.0
+    )
     avg_latency_ms = round(total_latency / total_samples, 2) if total_samples else 0.0
 
     report = {
@@ -192,12 +287,21 @@ def run_evaluation():
         "metrics": {
             "answer_accuracy": answer_accuracy,
             "tool_success_rate": tool_success_rate,
+            "tool_call_accuracy": tool_call_accuracy,
+            "top_k_hit_rate": top_k_hit_rate,
+            "avg_retrieval_latency_ms": avg_retrieval_latency_ms,
+            "multi_turn_accuracy": multi_turn_accuracy,
             "avg_latency_ms": avg_latency_ms,
         },
         "breakdown": {
             "answer_correct_count": answer_correct_count,
             "total_tool_calls": total_tool_calls,
             "total_tool_success": total_tool_success,
+            "tool_expected_samples": len(tool_expected_samples),
+            "rag_samples": retrieval_total,
+            "retrieval_hit_count": retrieval_hit_count,
+            "multi_turn_samples": len(multi_turn_samples),
+            "multi_turn_correct_count": multi_turn_correct,
         },
         "detail_path": str(DETAIL_PATH),
     }
@@ -207,8 +311,9 @@ def run_evaluation():
         json.dump(report, f, ensure_ascii=False, indent=2)
 
     fieldnames = [
-        "id", "query", "answer_correct", "expected_tools_hit", "latency_ms",
-        "tool_call_total", "tool_call_success", "tool_call_failed", "tool_calls", "answer_preview", "error_message",
+        "id", "type", "query", "has_expected_tools", "answer_correct", "expected_tools_hit", "retrieval_hit",
+        "retrieval_latency_ms", "latency_ms", "tool_call_total", "tool_call_success",
+        "tool_call_failed", "tool_calls", "answer_preview", "error_message", "retrieval_error",
     ]
     with open(DETAIL_PATH, "w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
@@ -219,6 +324,10 @@ def run_evaluation():
     print(f"Total samples: {total_samples}")
     print(f"Answer accuracy: {answer_accuracy}%")
     print(f"Tool success rate: {tool_success_rate}%")
+    print(f"Tool call accuracy: {tool_call_accuracy}%")
+    print(f"Top-K hit rate: {top_k_hit_rate}%")
+    print(f"Average retrieval latency: {avg_retrieval_latency_ms} ms")
+    print(f"Multi-turn accuracy: {multi_turn_accuracy}%")
     print(f"Average latency: {avg_latency_ms} ms")
     print(f"Report: {REPORT_PATH}")
     print(f"Details: {DETAIL_PATH}")

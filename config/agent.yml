@@ -1,1 +1,7 @@
 external_data_path: data/external/records.csv
+gaodekey: be94fdcfbe1c5f8298ac781932f866bf
+gaode_base_url: https://restapi.amap.com
+gaode_timeout: 5
+public_ip_sources:
+  - https://ipv4.icanhazip.com
+public_ip_timeout: 3
