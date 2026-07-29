@@ -7,10 +7,15 @@ wheels/
 chroma_db/
 logs/
 md5.text
-data/
+# Runtime SQLite data is generated from the committed sample CSV at startup.
+data/*.db
+data/*.db-*
 *.egg-info
 
 # Virtual environments
 .venv
 .env
 evaluation/output/
+
+# Local learning notes are not project artifacts.
+note_langchain_memory_tool.md

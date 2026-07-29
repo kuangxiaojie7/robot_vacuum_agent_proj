@@ -80,7 +80,7 @@ embedding_model_name: text-embedding-v4
 
 ### 准备本地数据
 
-出于隐私和体积考虑，`data/`、`chroma_db/` 与评测输出不会提交到 Git。因此 clone 项目后，需要自行准备本地知识库和用户记录：
+项目提交了脱敏的示例知识库和用户记录，便于直接构建 RAG。运行时生成的 `data/*.db`、`chroma_db/` 与评测输出不会提交到 Git；接入真实业务数据时，请替换为脱敏数据，且不要提交真实用户信息。
 
 ```text
 data/
