@@ -1,5 +1,11 @@
+from dotenv import load_dotenv
 import yaml
 from utils.path_tools import get_abs_path
+
+# Load local secrets for command-line, Streamlit, and FastAPI entry points.
+# Existing shell environment variables take precedence over .env values.
+load_dotenv(get_abs_path(".env"), override=False)
+
 
 class ConfigHandler(object):
     @staticmethod

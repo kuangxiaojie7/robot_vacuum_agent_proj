@@ -18,6 +18,7 @@ from utils.request_context import (
     set_request_context,
 )
 from utils.sqlite_store import sqlite_store
+import os
 
 '''
 urlencode：将字典或类似字典的对象转换为 URL 查询字符串，例如将 {"name": "test", "age": 10} 转换为 name=test&age=10
@@ -68,9 +69,9 @@ GAODE_TIMEOUT = float(agent_conf.get("gaode_timeout"))
 
 # 调用高德地图的API(包括天气接口，逆地理编码接口)，返回JSON数据
 def _gaode_get(path: str, params: dict) -> dict:
-    gaode_key = (agent_conf.get("gaodekey") or "").strip()
+    gaode_key = os.getenv("GAODE_API_KEY", "").strip()
     if not gaode_key:
-        raise ValueError("agent.yml中未配置gaodekey")
+        raise ValueError("未配置 GAODE_API_KEY 环境变量")
 
     query = dict(params)
     query["key"] = gaode_key

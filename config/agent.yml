@@ -1,7 +1,6 @@
 external_data_path: data/external/records.csv
 sqlite_db_path: data/app.db
 conversation_history_limit: 20
-gaodekey: be94fdcfbe1c5f8298ac781932f866bf
 gaode_base_url: https://restapi.amap.com
 gaode_timeout: 5
 public_ip_sources:

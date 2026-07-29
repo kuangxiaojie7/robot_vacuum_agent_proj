@@ -37,6 +37,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     conversation_id: str
     answer: str
+    sources: list[str] = Field(default_factory=list)
     latency_ms: float
     tool_call_total: int
     tool_call_success: int

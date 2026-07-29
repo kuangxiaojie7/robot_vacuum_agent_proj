@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 
@@ -24,11 +25,20 @@ class SQLiteStore:
         conn.row_factory = sqlite3.Row
         return conn
 
+    @contextmanager
+    def _connection(self):
+        """Close every SQLite connection after its transaction completes."""
+        conn = self._connect()
+        try:
+            yield conn
+        finally:
+            conn.close()
+
     def _initialize(self) -> None:
         if self._initialized:
             return
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 CREATE TABLE IF NOT EXISTS usage_records (
@@ -79,7 +89,7 @@ class SQLiteStore:
             logger.warning(f"[sqlite_store] 外部记录文件不存在: {self.external_data_path}")
             return
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             count = conn.execute("SELECT COUNT(1) FROM usage_records").fetchone()[0]
             if count > 0:
                 return
@@ -111,7 +121,7 @@ class SQLiteStore:
 
     def get_usage_record(self, user_id: str, month: str) -> dict[str, str] | None:
         self._initialize()
-        with self._connect() as conn:
+        with self._connection() as conn:
             row = conn.execute(
                 """
                 SELECT feature, efficiency, consumables, comparison
@@ -135,7 +145,7 @@ class SQLiteStore:
         self._initialize()
         conversation_id = (conversation_id or "").strip() or str(uuid.uuid4())
         now = datetime.now().isoformat(timespec="seconds")
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO conversations (conversation_id, created_at, updated_at)
@@ -149,7 +159,7 @@ class SQLiteStore:
     def list_messages(self, conversation_id: str, limit: int | None = None) -> list[dict[str, str]]:
         self._initialize()
         limit = limit or self.history_limit
-        with self._connect() as conn:
+        with self._connection() as conn:
             rows = conn.execute(
                 """
                 SELECT role, content FROM (
@@ -171,7 +181,7 @@ class SQLiteStore:
         if not messages:
             return
 
-        with self._connect() as conn:
+        with self._connection() as conn:
             existing = conn.execute(
                 "SELECT COUNT(1) FROM messages WHERE conversation_id = ?",
                 (conversation_id,),
@@ -200,7 +210,7 @@ class SQLiteStore:
     def append_message(self, conversation_id: str, role: str, content: str) -> None:
         self._initialize()
         now = datetime.now().isoformat(timespec="seconds")
-        with self._connect() as conn:
+        with self._connection() as conn:
             conn.execute(
                 """
                 INSERT INTO messages (conversation_id, role, content, created_at)

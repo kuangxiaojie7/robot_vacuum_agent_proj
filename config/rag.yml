@@ -1,3 +1,5 @@
-chat_model_name: qwen3.5-flash
+# Business-space OpenAI-compatible API, used by chat, judge, and embeddings.
+dashscope_compatible_base_url: https://ws-qrleso2bnoobua9x.cn-beijing.maas.aliyuncs.com/compatible-mode/v1
+chat_model_name: qwen3.7-plus
 judge_model_name: qwen3.7-max
 embedding_model_name: text-embedding-v4

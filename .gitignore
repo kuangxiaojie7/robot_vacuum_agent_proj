@@ -12,4 +12,5 @@ data/
 
 # Virtual environments
 .venv
+.env
 evaluation/output/

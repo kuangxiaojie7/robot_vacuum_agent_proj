@@ -1,10 +1,17 @@
 from abc import ABC
 from abc import abstractmethod
-from langchain_community.chat_models.tongyi import ChatTongyi, BaseChatModel
-from langchain_community.embeddings import DashScopeEmbeddings
 from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from typing import Optional
+import os
 from utils.config_handler import rag_conf
+
+
+# The workspace provides both chat completion and embeddings through this endpoint.
+dashscope_compatible_base_url = str(
+    rag_conf.get("dashscope_compatible_base_url", "") or ""
+).strip().rstrip("/")
 
 
 class BaseModelFactory(ABC):
@@ -21,12 +28,31 @@ class ChatModelFactory(BaseModelFactory):
         model_name = str(rag_conf.get(self.config_key, "") or "").strip()
         if not model_name:
             return None
-        return ChatTongyi(model=model_name)
+        return ChatOpenAI(
+            model=model_name,
+            api_key=_get_api_key(),
+            base_url=dashscope_compatible_base_url,
+        )
 
 
 class EmbeddingsFactory(BaseModelFactory):
     def generator(self) -> Optional[Embeddings | BaseChatModel]:
-        return DashScopeEmbeddings(model=rag_conf["embedding_model_name"])
+        return OpenAIEmbeddings(
+            model=rag_conf["embedding_model_name"],
+            api_key=_get_api_key(),
+            base_url=dashscope_compatible_base_url,
+            # Bailian's compatible endpoint accepts text, not OpenAI tiktoken ID lists.
+            check_embedding_ctx_length=False,
+        )
+
+
+def _get_api_key() -> str:
+    api_key = os.getenv("DASHSCOPE_API_KEY", "").strip()
+    if not api_key:
+        raise ValueError("未配置 DASHSCOPE_API_KEY 环境变量")
+    if not dashscope_compatible_base_url:
+        raise ValueError("未配置 dashscope_compatible_base_url")
+    return api_key
 
 
 chat_model = ChatModelFactory("chat_model_name").generator()

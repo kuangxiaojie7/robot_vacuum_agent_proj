@@ -99,6 +99,17 @@ def format_change_line(name: str, change: dict, unit: str = "%", higher_is_bette
     )
 
 
+def format_score_change_line(name: str, change: dict) -> str:
+    """Format a unitless ranking score such as MRR without percentage wording."""
+    b = change["baseline"]
+    o = change["optimized"]
+    delta = change["absolute_change"]
+    direction = "提升" if delta >= 0 else "下降"
+    relative = change["relative_change_pct"]
+    relative_text = "相对变化：N/A（基线为0）" if relative is None else f"相对变化：{relative}%"
+    return f"- {name}: {b} -> {o}，{direction}{abs(delta)}，{relative_text}"
+
+
 def format_latency_line(change: dict, label: str = "平均响应时延") -> str:
     b = change["baseline"]
     o = change["optimized"]
@@ -107,7 +118,11 @@ def format_latency_line(change: dict, label: str = "平均响应时延") -> str:
 
     if reduction_pct is None:
         return f"- {label}: {b} ms -> {o} ms，降幅：N/A（基线为0）"
-    return f"- {label}: {b} ms -> {o} ms，降低 {reduction_ms} ms（{reduction_pct}%）"
+    if reduction_ms > 0:
+        return f"- {label}: {b} ms -> {o} ms，降低 {reduction_ms} ms（{reduction_pct}%）"
+    if reduction_ms < 0:
+        return f"- {label}: {b} ms -> {o} ms，增加 {abs(reduction_ms)} ms（{abs(reduction_pct)}%）"
+    return f"- {label}: {b} ms -> {o} ms，持平"
 
 
 def build_markdown(result: dict) -> str:
@@ -127,9 +142,27 @@ def build_markdown(result: dict) -> str:
 
     metrics = result["metrics"]
     lines.append("## 核心指标")
+    if result.get("evaluation_scope") == "evidence_level_v2":
+        lines.append(format_change_line("证据 Hit@1", metrics["evidence_hit_at_1"], unit="%", higher_is_better=True))
+        lines.append(format_change_line("证据 Hit@K", metrics["evidence_hit_at_k"], unit="%", higher_is_better=True))
+        lines.append(format_score_change_line("平均证据 MRR@K", metrics["avg_evidence_mrr_at_k"]))
+        lines.append(format_change_line("平均证据 Recall@K", metrics["avg_evidence_recall_at_k"], unit="%", higher_is_better=True))
+        lines.append(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
+        return "\n".join(lines)
+    if result.get("evaluation_scope") == "retrieval_only":
+        lines.append(format_change_line("Top-K Hit Rate", metrics["top_k_hit_rate"], unit="%", higher_is_better=True))
+        lines.append(format_change_line("平均 Recall@K", metrics["avg_recall_at_k"], unit="%", higher_is_better=True))
+        lines.append(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
+        return "\n".join(lines)
+
     lines.append(format_change_line("回答正确率", metrics["answer_accuracy"], unit="%", higher_is_better=True))
     lines.append(format_change_line("工具调用成功率", metrics["tool_success_rate"], unit="%", higher_is_better=True))
+    lines.append(format_change_line("工具调用准确率", metrics["tool_call_accuracy"], unit="%", higher_is_better=True))
+    lines.append(format_change_line("Top-K Hit Rate", metrics["top_k_hit_rate"], unit="%", higher_is_better=True))
+    lines.append(format_change_line("平均 Recall@K", metrics["avg_recall_at_k"], unit="%", higher_is_better=True))
+    lines.append(format_change_line("多轮对话正确率", metrics["multi_turn_accuracy"], unit="%", higher_is_better=True))
     lines.append(format_latency_line(metrics["avg_latency_ms"], label="平均响应时延"))
+    lines.append(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
     if metrics.get("p95_latency_ms") is not None:
         lines.append(format_latency_line(metrics["p95_latency_ms"], label="P95响应时延"))
     lines.append("")
@@ -162,9 +195,45 @@ def compare_reports(baseline_path: Path, optimized_path: Path) -> dict:
         safe_float(baseline_metrics.get("tool_success_rate", 0.0)),
         safe_float(optimized_metrics.get("tool_success_rate", 0.0)),
     )
+    tool_call_accuracy = calc_metric_change(
+        safe_float(baseline_metrics.get("tool_call_accuracy", 0.0)),
+        safe_float(optimized_metrics.get("tool_call_accuracy", 0.0)),
+    )
+    top_k_hit_rate = calc_metric_change(
+        safe_float(baseline_metrics.get("top_k_hit_rate", 0.0)),
+        safe_float(optimized_metrics.get("top_k_hit_rate", 0.0)),
+    )
+    avg_recall_at_k = calc_metric_change(
+        safe_float(baseline_metrics.get("avg_recall_at_k", 0.0)),
+        safe_float(optimized_metrics.get("avg_recall_at_k", 0.0)),
+    )
+    evidence_hit_at_1 = calc_metric_change(
+        safe_float(baseline_metrics.get("evidence_hit_at_1", 0.0)),
+        safe_float(optimized_metrics.get("evidence_hit_at_1", 0.0)),
+    )
+    evidence_hit_at_k = calc_metric_change(
+        safe_float(baseline_metrics.get("evidence_hit_at_k", 0.0)),
+        safe_float(optimized_metrics.get("evidence_hit_at_k", 0.0)),
+    )
+    avg_evidence_mrr_at_k = calc_metric_change(
+        safe_float(baseline_metrics.get("avg_evidence_mrr_at_k", 0.0)),
+        safe_float(optimized_metrics.get("avg_evidence_mrr_at_k", 0.0)),
+    )
+    avg_evidence_recall_at_k = calc_metric_change(
+        safe_float(baseline_metrics.get("avg_evidence_recall_at_k", 0.0)),
+        safe_float(optimized_metrics.get("avg_evidence_recall_at_k", 0.0)),
+    )
+    multi_turn_accuracy = calc_metric_change(
+        safe_float(baseline_metrics.get("multi_turn_accuracy", 0.0)),
+        safe_float(optimized_metrics.get("multi_turn_accuracy", 0.0)),
+    )
     avg_latency_ms = calc_latency_change(
         safe_float(baseline_metrics.get("avg_latency_ms", 0.0)),
         safe_float(optimized_metrics.get("avg_latency_ms", 0.0)),
+    )
+    avg_retrieval_latency_ms = calc_latency_change(
+        safe_float(baseline_metrics.get("avg_retrieval_latency_ms", 0.0)),
+        safe_float(optimized_metrics.get("avg_retrieval_latency_ms", 0.0)),
     )
 
     baseline_p95 = read_latency_p95(baseline.get("detail_path"))
@@ -174,6 +243,10 @@ def compare_reports(baseline_path: Path, optimized_path: Path) -> dict:
         p95_latency_ms = calc_latency_change(baseline_p95, optimized_p95)
 
     warnings = []
+    baseline_scope = baseline.get("evaluation_scope", "full")
+    optimized_scope = optimized.get("evaluation_scope", "full")
+    baseline_protocol = baseline.get("evaluation_protocol", "full")
+    optimized_protocol = optimized.get("evaluation_protocol", "full")
     if baseline.get("model_unavailable"):
         warnings.append("基线报告标记为 model_unavailable=true，基线数据可能不可靠。")
     if optimized.get("model_unavailable"):
@@ -182,16 +255,41 @@ def compare_reports(baseline_path: Path, optimized_path: Path) -> dict:
         warnings.append("两份报告样本数不一致，建议使用相同评测集重跑。")
     if baseline.get("dataset_path") != optimized.get("dataset_path"):
         warnings.append("两份报告的数据集路径不同，建议使用同一份数据集。")
+    if baseline_scope != optimized_scope:
+        warnings.append("两份报告的评测范围不一致，不能直接比较端到端指标。")
+    if baseline_protocol != optimized_protocol:
+        warnings.append("两份报告的评测协议不一致，不能直接比较检索指标。")
+
+    evidence_level_v2 = (
+        baseline_scope == optimized_scope == "retrieval_only"
+        and baseline_protocol == optimized_protocol == "evidence_level_v2"
+    )
 
     result = {
         "baseline_report": str(baseline_path),
         "optimized_report": str(optimized_path),
         "baseline_total_samples": baseline.get("total_samples"),
         "optimized_total_samples": optimized.get("total_samples"),
+        "evaluation_scope": (
+            "evidence_level_v2"
+            if evidence_level_v2
+            else "retrieval_only"
+            if baseline_scope == optimized_scope == "retrieval_only"
+            else "full"
+        ),
         "metrics": {
             "answer_accuracy": answer_accuracy,
             "tool_success_rate": tool_success_rate,
+            "tool_call_accuracy": tool_call_accuracy,
+            "top_k_hit_rate": top_k_hit_rate,
+            "avg_recall_at_k": avg_recall_at_k,
+            "evidence_hit_at_1": evidence_hit_at_1,
+            "evidence_hit_at_k": evidence_hit_at_k,
+            "avg_evidence_mrr_at_k": avg_evidence_mrr_at_k,
+            "avg_evidence_recall_at_k": avg_evidence_recall_at_k,
+            "multi_turn_accuracy": multi_turn_accuracy,
             "avg_latency_ms": avg_latency_ms,
+            "avg_retrieval_latency_ms": avg_retrieval_latency_ms,
             "p95_latency_ms": p95_latency_ms,
         },
         "warnings": warnings,
@@ -215,9 +313,27 @@ def print_summary(result: dict):
         print("")
 
     metrics = result["metrics"]
+    if result.get("evaluation_scope") == "evidence_level_v2":
+        print(format_change_line("证据 Hit@1", metrics["evidence_hit_at_1"], unit="%", higher_is_better=True))
+        print(format_change_line("证据 Hit@K", metrics["evidence_hit_at_k"], unit="%", higher_is_better=True))
+        print(format_score_change_line("平均证据 MRR@K", metrics["avg_evidence_mrr_at_k"]))
+        print(format_change_line("平均证据 Recall@K", metrics["avg_evidence_recall_at_k"], unit="%", higher_is_better=True))
+        print(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
+        return
+    if result.get("evaluation_scope") == "retrieval_only":
+        print(format_change_line("Top-K Hit Rate", metrics["top_k_hit_rate"], unit="%", higher_is_better=True))
+        print(format_change_line("平均 Recall@K", metrics["avg_recall_at_k"], unit="%", higher_is_better=True))
+        print(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
+        return
+
     print(format_change_line("回答正确率", metrics["answer_accuracy"], unit="%", higher_is_better=True))
     print(format_change_line("工具调用成功率", metrics["tool_success_rate"], unit="%", higher_is_better=True))
+    print(format_change_line("工具调用准确率", metrics["tool_call_accuracy"], unit="%", higher_is_better=True))
+    print(format_change_line("Top-K Hit Rate", metrics["top_k_hit_rate"], unit="%", higher_is_better=True))
+    print(format_change_line("平均 Recall@K", metrics["avg_recall_at_k"], unit="%", higher_is_better=True))
+    print(format_change_line("多轮对话正确率", metrics["multi_turn_accuracy"], unit="%", higher_is_better=True))
     print(format_latency_line(metrics["avg_latency_ms"], label="平均响应时延"))
+    print(format_latency_line(metrics["avg_retrieval_latency_ms"], label="平均检索时延"))
     if metrics.get("p95_latency_ms") is not None:
         print(format_latency_line(metrics["p95_latency_ms"], label="P95响应时延"))
 

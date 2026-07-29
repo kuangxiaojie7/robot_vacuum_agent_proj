@@ -1,10 +1,12 @@
 from langchain.agents import create_agent
+from langchain_core.messages import AIMessage, ToolMessage
 import time
 from model.factory import chat_model
 from utils.prompt_loader import load_system_prompts
 from agent.tools.agent_tools import (rag_summarize, get_weather, get_user_location, get_user_id,
                                      get_current_month, fetch_external_data, fill_context_for_report)
 from agent.tools.middleware import monitor_tool, log_before_model, report_prompt_switch
+from rag.rag_service import RagSummarizeService
 
 
 class ReactAgent:
@@ -72,6 +74,22 @@ class ReactAgent:
             messages.append({"role": "user", "content": query})
         return {"messages": messages}
 
+    @classmethod
+    def _extract_rag_sources(cls, messages) -> list[str]:
+        sources = []
+        for message in messages:
+            if not isinstance(message, ToolMessage) or getattr(message, "name", "") != "rag_summarize":
+                continue
+            content = cls._message_content_to_text(message.content)
+            sources.extend(RagSummarizeService.extract_source_references(content))
+        return list(dict.fromkeys(sources))
+
+    @staticmethod
+    def _append_sources(answer: str, sources: list[str]) -> str:
+        if not sources or "【检索来源】" in answer or "参考来源：" in answer:
+            return answer
+        return f"{answer}\n\n参考来源：\n" + "\n".join(sources)
+
     def execute(self, query: str, history=None, context=None):
         input_dict = self._build_input_messages(query, history)
         runtime_context = self._build_runtime_context(context)
@@ -84,9 +102,12 @@ class ReactAgent:
         messages = result.get("messages", [])
         if messages:
             answer = self._message_content_to_text(messages[-1].content).strip()
+        sources = self._extract_rag_sources(messages)
+        answer = self._append_sources(answer, sources)
 
         return {
             "answer": answer,
+            "sources": sources,
             "latency_ms": latency_ms,
             "tool_call_total": int(runtime_context.get("tool_call_total", 0)),
             "tool_call_success": int(runtime_context.get("tool_call_success", 0)),
@@ -98,14 +119,21 @@ class ReactAgent:
     def execute_stream(self, query: str, history=None, context=None):
         input_dict = self._build_input_messages(query, history)
         runtime_context = self._build_runtime_context(context)
+        sources = []
 
         # 第三个参数context就是上下文runtime中的信息，就是我们做提示词切换的标记
         for chunk in self.agent.stream(input_dict, stream_mode="values", context=runtime_context):
             latest_message = chunk["messages"][-1]
+            if isinstance(latest_message, ToolMessage) and getattr(latest_message, "name", "") == "rag_summarize":
+                content = self._message_content_to_text(latest_message.content)
+                sources = list(dict.fromkeys(sources + RagSummarizeService.extract_source_references(content)))
+                continue
             # 这里chunk是一个字典，每次更新messages，然后返回给streamlit显示
             if latest_message.content:
-    
-                yield self._message_content_to_text(latest_message.content).strip() + "\n"
+                content = self._message_content_to_text(latest_message.content).strip()
+                if isinstance(latest_message, AIMessage) and not latest_message.tool_calls:
+                    content = self._append_sources(content, sources)
+                yield content + "\n"
                 
         '''
         stream_mode 参数控制流输出的格式：

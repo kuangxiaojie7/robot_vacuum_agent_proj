@@ -147,4 +147,5 @@ dependencies = [
     "yarl==1.22.0",
     "zipp==3.23.0",
     "zstandard==0.25.0",
+    "langchain-openai>=1.1.7",
 ]

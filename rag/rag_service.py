@@ -8,6 +8,10 @@ from langchain_core.runnables import RunnableLambda
 from utils.chain_debug import print_prompt
 from model.factory import chat_model
 from utils.path_tools import get_abs_path
+from pathlib import Path
+
+
+SOURCE_BLOCK_HEADER = "【检索来源】"
 
 
 class RagSummarizeService:
@@ -71,8 +75,42 @@ class RagSummarizeService:
         return chain
 
     # 从向量数据库检索文档，返回的是list[Document],共有k个文档
-    def retrieve_docs(self, query: str) -> list[Document]:
-        return self.retriever.invoke(query)
+    def retrieve_docs(self, query: str, mode: str | None = None) -> list[Document]:
+        return self.vector_store.retrieve(query, mode=mode)
+
+    def set_retrieval_mode(self, mode: str) -> None:
+        self.vector_store.set_retrieval_mode(mode)
+
+    @staticmethod
+    #这个函数的作用是从一组文档中提取出参考来源的列表，每个参考来源包含文件名和一段简短的证据摘录。它会去重相同的文件名，并限制摘录的长度为snippet_limit个字符。最终返回一个包含所有参考来源的列表，每个参考来源的格式为"[序号] 文件名：摘录"。
+    def build_source_references(context_docs: list[Document], snippet_limit: int = 160) -> list[str]:
+        """Return de-duplicated source file names with a short evidence excerpt."""
+        references = []
+        seen_sources = set()
+        for document in context_docs:
+            metadata = document.metadata or {}
+            raw_source = str(metadata.get("source", "")).strip()
+            source = Path(raw_source).name if raw_source else "未知来源"
+            if source in seen_sources:
+                continue
+            seen_sources.add(source)
+            snippet = " ".join(document.page_content.split())[:snippet_limit].strip()
+            references.append(f"[{len(references) + 1}] {source}：{snippet}")
+        return references
+
+    @staticmethod
+    #source_block_header = "【检索来源】",这个函数的作用是从工具输出中提取出参考来源的列表，如果工具输出中没有包含"【检索来源】"这个标记，就返回一个空列表。否则，它会将工具输出按"【检索来源】"分割，取分割后的第二部分，然后按行拆分，去掉每行的前后空格，并过滤掉空行，最终返回一个包含所有参考来源的列表。
+    def extract_source_references(tool_output: str) -> list[str]:
+        if SOURCE_BLOCK_HEADER not in (tool_output or ""):
+            return []
+        source_block = tool_output.split(SOURCE_BLOCK_HEADER, 1)[1]
+        return [line.strip() for line in source_block.splitlines() if line.strip()]
+
+    @staticmethod
+    def format_source_block(references: list[str]) -> str:
+        if not references:
+            return ""
+        return f"{SOURCE_BLOCK_HEADER}\n" + "\n".join(references)
 
     def rag_summarize(self, query: str) -> str:
         # key: input, for user query
@@ -88,7 +126,10 @@ class RagSummarizeService:
         input_dict["input"] = query
         input_dict["context"] = context
 
-        return self.chain.invoke(input_dict)
+        answer = self.chain.invoke(input_dict).strip()
+        source_references = self.build_source_references(context_docs)
+        source_block = self.format_source_block(source_references)
+        return f"{answer}\n\n{source_block}" if source_block else answer
 
 
 # for testing
